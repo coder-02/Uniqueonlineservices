@@ -1,0 +1,23 @@
+{
+  "name": "Unique Online Services",
+  "short_name": "UOS",
+  "description": "Aadhaar, PAN, Passport, Government Schemes, Insurance, FASTag, Banking and more - all in one place.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#071b45",
+  "theme_color": "#1565d8",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
