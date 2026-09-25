@@ -1474,3 +1474,10 @@ svg { display: inline-block; vertical-align: middle; flex-shrink: 0; }
   background: rgba(16,185,129,.14); border: 1px solid rgba(16,185,129,.3); color: var(--green-dark);
   padding: 10px 14px; border-radius: 10px; font-size: 0.86rem; margin-bottom: 14px;
 }
+
+
+/* Bill thank-you toggle + note */
+.bs-thankyou { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--muted); margin: 12px 0; cursor: pointer; }
+.bs-thankyou input { width: 16px; height: 16px; }
+.bs-thankyou svg { color: var(--wa); }
+.thankyou-note { display: inline-flex; align-items: center; gap: 6px; color: var(--green-dark); font-size: 0.85rem; margin: 8px 0; }

@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendWhatsApp, buildThankYouMessage } from '../_lib.js'
 
 // GET  /api/bills   -> recent bills (admin)
 // POST /api/bills   -> create bill (admin)
@@ -49,5 +49,28 @@ export async function onRequestPost({ request, env }) {
     )
     .run()
 
-  return json({ ok: true, bill_no: billNo, total })
+  // Upsert customer (best-effort)
+  try {
+    if (body.customer_mobile && /^\d{10}$/.test(body.customer_mobile)) {
+      const existing = await env.DB.prepare('SELECT id FROM customers WHERE mobile = ?').bind(body.customer_mobile).first()
+      if (!existing) {
+        await env.DB.prepare('INSERT INTO customers (name, mobile) VALUES (?, ?)')
+          .bind(body.customer_name || 'Customer', body.customer_mobile).run()
+      }
+    }
+  } catch { /* ignore */ }
+
+  // Auto "Thank You" message to customer (if requested + mobile valid + API configured)
+  let waResult = { sent: false }
+  if (body.autoThankYou && body.customer_mobile && /^\d{10}$/.test(body.customer_mobile)) {
+    const text = buildThankYouMessage({
+      name: body.customer_name || 'Customer',
+      kind: 'bill',
+      billNo,
+      amount: total,
+    })
+    waResult = await sendWhatsApp(env, `91${body.customer_mobile}`, text)
+  }
+
+  return json({ ok: true, bill_no: billNo, total, whatsappSent: waResult.sent })
 }

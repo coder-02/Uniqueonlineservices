@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { api } from '../../lib/api.js'
 import { allServices } from '../../data/services.js'
-import { Plus, Trash2, Loader2, CheckCircle2, Receipt } from 'lucide-react'
+import { buildThankYou } from '../../config.js'
+import { Plus, Trash2, Loader2, CheckCircle2, Receipt, MessageCircle } from 'lucide-react'
 
 const money = (n) => '\u20B9' + Number(n || 0).toLocaleString('en-IN')
 
@@ -10,6 +11,7 @@ export default function NewBill() {
   const [items, setItems] = useState([{ name: '', price: '', qty: 1 }])
   const [discount, setDiscount] = useState('')
   const [mode, setMode] = useState('cash')
+  const [thankYou, setThankYou] = useState(true)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(null)
   const [err, setErr] = useState('')
@@ -29,16 +31,24 @@ export default function NewBill() {
     setErr('')
     const clean = items.filter((it) => it.name.trim() && Number(it.price) > 0)
     if (clean.length === 0) { setErr('Kam se kam ek item add karo (naam + price).'); return }
+    const mobile = (customer.mobile || '').trim()
+    const wantThankYou = thankYou && /^\d{10}$/.test(mobile)
     setSaving(true)
     try {
       const res = await api.createBill({
         customer_name: customer.name || 'Walk-in',
-        customer_mobile: customer.mobile,
+        customer_mobile: mobile,
         items: clean.map((it) => ({ name: it.name, price: Number(it.price), qty: Number(it.qty) || 1 })),
         discount: Number(discount) || 0,
         payment_mode: mode,
+        autoThankYou: wantThankYou,
       })
-      setDone(res)
+      // If a thank-you was requested but the API couldn't auto-send, open WhatsApp.
+      if (wantThankYou && !res.whatsappSent) {
+        const msg = buildThankYou({ name: customer.name || 'Customer', kind: 'bill', billNo: res.bill_no, amount: res.total })
+        window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
+      }
+      setDone({ ...res, thankYouSent: wantThankYou && res.whatsappSent })
     } catch (e) {
       setErr(e.message)
     } finally {
@@ -61,6 +71,7 @@ export default function NewBill() {
         <h3>Bill Created!</h3>
         <p className="req-ref">Bill No: <b>{done.bill_no}</b></p>
         <p className="muted">Total: <b>{money(done.total)}</b></p>
+        {done.thankYouSent && <p className="thankyou-note"><MessageCircle size={14} /> Thank-you message customer ko bhej diya gaya.</p>}
         <button className="btn btn-primary btn-sm" onClick={reset}><Receipt size={15} /> New Bill</button>
       </div>
     )
@@ -103,6 +114,10 @@ export default function NewBill() {
             <button key={m} className={`chip-btn ${mode === m ? 'active' : ''}`} onClick={() => setMode(m)}>{m.toUpperCase()}</button>
           ))}
         </div>
+        <label className="bs-thankyou">
+          <input type="checkbox" checked={thankYou} onChange={(e) => setThankYou(e.target.checked)} />
+          <MessageCircle size={15} /> Customer ko Thank-You WhatsApp bhejo (mobile daala ho)
+        </label>
         {err && <p className="admin-error">{err}</p>}
         <button className="btn btn-primary btn-block" onClick={save} disabled={saving}>
           {saving ? <><Loader2 size={17} className="spin" /> Saving...</> : <>Create Bill - {money(total)}</>}

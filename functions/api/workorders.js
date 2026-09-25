@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendWhatsApp, buildThankYouMessage } from '../_lib.js'
 
 // GET   /api/workorders?status=  -> list (admin)
 // POST  /api/workorders           -> create (admin)
@@ -60,5 +60,23 @@ export async function onRequestPatch({ request, env }) {
   await env.DB.prepare("UPDATE work_orders SET status = ?, updated_at = datetime('now') WHERE id = ?")
     .bind(body.status, body.id)
     .run()
-  return json({ ok: true })
+
+  // When work is completed/delivered, send a thank-you message to the customer
+  // (only if a WhatsApp API is configured). Frontend passes notify:true.
+  let waResult = { sent: false }
+  if (body.notify && (body.status === 'completed' || body.status === 'delivered')) {
+    const row = await env.DB.prepare('SELECT * FROM work_orders WHERE id = ?').bind(body.id).first()
+    if (row && row.customer_mobile && /^\d{10}$/.test(row.customer_mobile)) {
+      const text = buildThankYouMessage({
+        name: row.customer_name,
+        kind: 'work',
+        service: row.service,
+        ref: row.ref,
+        amount: row.amount,
+      })
+      waResult = await sendWhatsApp(env, `91${row.customer_mobile}`, text)
+    }
+  }
+
+  return json({ ok: true, whatsappSent: waResult.sent })
 }

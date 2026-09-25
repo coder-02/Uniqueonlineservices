@@ -67,6 +67,60 @@ ${line}
   )
 }
 
+// Build a "Thank You" message sent after a customer's work is done / bill made.
+// kind: "bill" | "work"
+export function buildThankYouMessage({ name, kind, service, billNo, ref, amount, operatorName }) {
+  const line = '\u2501'.repeat(20)
+  const operator = operatorName || BIZ.operatorName
+  const amtText = amount ? `\u20B9${Number(amount).toLocaleString('en-IN')}/-` : ''
+
+  let middle = ''
+  if (kind === 'bill') {
+    middle =
+`Aapka kaam successfully complete ho gaya hai. Hamari shop par aane ke liye *dhanyawaad*! \u{1F64F}
+
+*BILL DETAILS*
+${line}
+${billNo ? `*Bill No:* ${billNo}\n` : ''}${amtText ? `*Amount Paid:* ${amtText}\n` : ''}`
+  } else {
+    middle =
+`Aapki *${service || 'service'}* ka kaam *complete* ho gaya hai. Hamari service choose karne ke liye *dhanyawaad*! \u{1F64F}
+
+*WORK DETAILS*
+${line}
+${ref ? `*Order Ref:* ${ref}\n` : ''}${service ? `*Service:* ${service}\n` : ''}`
+  }
+
+  return (
+`*${BIZ.name.toUpperCase()}*
+*${BIZ.tagline}*
+${line}
+
+*THANK YOU*
+
+Hello *${name} Ji*,
+
+${middle}
+${line}
+
+Agar aapko aur koi online / government service chahiye ho, to hum hamesha aapki seva me hai.
+
+Kripya apne dost aur family ko bhi hamari shop batayein. \u{1F31F}
+
+${line}
+
+*VISIT AGAIN*
+\u{1F4CD} ${BIZ.address}
+\u{1F550} ${BIZ.timing}
+\u{1F4DE} ${BIZ.phoneDisplay}
+
+${line}
+\u{1F464} *${operator}*
+*${BIZ.name}*
+*${BIZ.tagline}*`
+  )
+}
+
 export function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,

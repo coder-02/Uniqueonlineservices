@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import { allServices } from '../../data/services.js'
+import { buildThankYou } from '../../config.js'
 import { Loader2, RefreshCw, Plus, Briefcase } from 'lucide-react'
 
 const money = (n) => '\u20B9' + Number(n || 0).toLocaleString('en-IN')
@@ -34,7 +35,21 @@ export default function WorkManager() {
     } catch (er) { setErr(er.message) } finally { setAdding(false) }
   }
 
-  const setStatus = async (id, status) => { await api.updateWorkOrder(id, status); load() }
+  const setStatus = async (id, status) => {
+    const row = rows.find((r) => r.id === id)
+    // When marking done, ask whether to send a thank-you WhatsApp
+    let notify = false
+    if ((status === 'completed' || status === 'delivered') && row?.customer_mobile && /^\d{10}$/.test(row.customer_mobile)) {
+      notify = window.confirm(`${row.customer_name} ko "Thank You" WhatsApp bhejein?`)
+    }
+    const res = await api.updateWorkOrder(id, status, notify)
+    // If thank-you was wanted but API not configured, open WhatsApp as fallback
+    if (notify && row && !res.whatsappSent) {
+      const msg = buildThankYou({ name: row.customer_name, kind: 'work', service: row.service, ref: row.ref, amount: row.amount })
+      window.open(`https://wa.me/91${row.customer_mobile}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
+    }
+    load()
+  }
 
   return (
     <div className="admin-grid-2">

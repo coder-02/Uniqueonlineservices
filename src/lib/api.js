@@ -46,7 +46,7 @@ export const api = {
 
   workorders: (status) => req(`/api/workorders${status ? `?status=${status}` : ''}`),
   createWorkOrder: (payload) => req('/api/workorders', { method: 'POST', body: payload }),
-  updateWorkOrder: (id, status) => req('/api/workorders', { method: 'PATCH', body: { id, status } }),
+  updateWorkOrder: (id, status, notify) => req('/api/workorders', { method: 'PATCH', body: { id, status, notify } }),
 
   expenses: () => req('/api/expenses'),
   addExpense: (payload) => req('/api/expenses', { method: 'POST', body: payload }),
