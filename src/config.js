@@ -3,7 +3,7 @@ export const business = {
   name: "Unique Online Services",
   tagline: "Aapki Har Online Zarurat, Ek Hi Jagah",
   subtitle: "Government Services • Banking • Insurance • Documents • Online Applications",
-  operatorName: "Sayed Saifurehman", // shown in the WhatsApp message as the service desk person
+  operatorName: "Sayed Saifur Rehman", // shown in the WhatsApp message as the service desk person
   phone: "7758952601",
   phoneDisplay: "+91 77589 52601",
   whatsapp: "917758952601", // country code + number, no + or spaces
@@ -26,39 +26,47 @@ export function waTo(mobile10, message) {
   return `https://wa.me/91${mobile10}?text=${encodeURIComponent(message)}`
 }
 
-// Professional "Thank You" message (used as fallback when WhatsApp API not set up).
+// Professional "Thank You" / service completion message.
 // kind: "bill" | "work"
 export function buildThankYou({ name, kind, service, billNo, ref, amount }) {
   const line = '\u2501'.repeat(20)
   const amt = amount ? `\u20B9${Number(amount).toLocaleString('en-IN')}/-` : ''
-  const middle =
+  const details =
     kind === 'bill'
-      ? `Aapka kaam successfully complete ho gaya hai. Hamari shop par aane ke liye *dhanyawaad*! \u{1F64F}\n\n*BILL DETAILS*\n${line}\n${billNo ? `*Bill No:* ${billNo}\n` : ''}${amt ? `*Amount:* ${amt}\n` : ''}`
-      : `Aapki *${service || 'service'}* ka kaam *complete* ho gaya hai. Hamari service choose karne ke liye *dhanyawaad*! \u{1F64F}\n\n*WORK DETAILS*\n${line}\n${ref ? `*Order Ref:* ${ref}\n` : ''}${service ? `*Service:* ${service}\n` : ''}`
+      ? `*BILL DETAILS*\n${line}\n${billNo ? `*Bill No.:* ${billNo}\n` : ''}${amt ? `*Amount Paid:* ${amt}\n` : ''}\n*SERVICE STATUS:* \u2705 Completed`
+      : `*SERVICE DETAILS*\n${line}\n${ref ? `*Order Ref:* ${ref}\n` : ''}${service ? `*Service:* ${service}\n` : ''}${amt ? `*Amount:* ${amt}\n` : ''}\n*SERVICE STATUS:* \u2705 Completed`
 
   return (
 `*${business.name.toUpperCase()}*
 *${business.tagline}*
 ${line}
 
-*THANK YOU*
+*SERVICE COMPLETION CONFIRMATION*
 
 Hello *${name} Ji*,
 
-${middle}
+Aapka service request successfully complete ho gaya hai.
+Hamari shop par visit karne ke liye *Thank You*! \u{1F64F}
+
+${details}
+
 ${line}
 
-Agar aapko aur koi online / government service chahiye ho, to hum hamesha aapki seva me hai.
-Kripya apne dost aur family ko bhi hamari shop batayein. \u{1F31F}
+Aapko agar future mein kisi bhi *Online / Government Service* ki zarurat ho, to aap humse contact kar sakte hain.
+
+Aapke trust aur support ke liye hum aabhari hain.
+Apne friends aur family ko bhi *${business.name}* ke baare mein zaroor batayein. \u{1F91D}
 
 ${line}
 
 *VISIT AGAIN*
+
 \u{1F4CD} ${business.address}
 \u{1F550} ${business.timing}
 \u{1F4DE} ${business.phoneDisplay}
 
 ${line}
+
 \u{1F464} *${business.operatorName}*
 *${business.name}*`
   )

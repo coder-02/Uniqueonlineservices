@@ -5,7 +5,7 @@
 export const BIZ = {
   name: 'Unique Online Services',
   tagline: 'Aapki Har Online Zarurat, Ek Hi Jagah',
-  operatorName: 'Sayed Saifurehman',
+  operatorName: 'Sayed Saifur Rehman',
   address: 'Aziz Chowk, Marul, Maharashtra',
   timing: 'Monday - Sunday | 9:00 AM - 9:00 PM',
   phoneDisplay: '+91 77589 52601',
@@ -67,28 +67,26 @@ ${line}
   )
 }
 
-// Build a "Thank You" message sent after a customer's work is done / bill made.
+// Build a "Thank You" / service completion message.
 // kind: "bill" | "work"
 export function buildThankYouMessage({ name, kind, service, billNo, ref, amount, operatorName }) {
   const line = '\u2501'.repeat(20)
   const operator = operatorName || BIZ.operatorName
   const amtText = amount ? `\u20B9${Number(amount).toLocaleString('en-IN')}/-` : ''
 
-  let middle = ''
+  let details = ''
   if (kind === 'bill') {
-    middle =
-`Aapka kaam successfully complete ho gaya hai. Hamari shop par aane ke liye *dhanyawaad*! \u{1F64F}
-
-*BILL DETAILS*
+    details =
+`*BILL DETAILS*
 ${line}
-${billNo ? `*Bill No:* ${billNo}\n` : ''}${amtText ? `*Amount Paid:* ${amtText}\n` : ''}`
+${billNo ? `*Bill No.:* ${billNo}\n` : ''}${amtText ? `*Amount Paid:* ${amtText}\n` : ''}
+*SERVICE STATUS:* \u2705 Completed`
   } else {
-    middle =
-`Aapki *${service || 'service'}* ka kaam *complete* ho gaya hai. Hamari service choose karne ke liye *dhanyawaad*! \u{1F64F}
-
-*WORK DETAILS*
+    details =
+`*SERVICE DETAILS*
 ${line}
-${ref ? `*Order Ref:* ${ref}\n` : ''}${service ? `*Service:* ${service}\n` : ''}`
+${ref ? `*Order Ref:* ${ref}\n` : ''}${service ? `*Service:* ${service}\n` : ''}${amtText ? `*Amount:* ${amtText}\n` : ''}
+*SERVICE STATUS:* \u2705 Completed`
   }
 
   return (
@@ -96,28 +94,34 @@ ${ref ? `*Order Ref:* ${ref}\n` : ''}${service ? `*Service:* ${service}\n` : ''}
 *${BIZ.tagline}*
 ${line}
 
-*THANK YOU*
+*SERVICE COMPLETION CONFIRMATION*
 
 Hello *${name} Ji*,
 
-${middle}
+Aapka service request successfully complete ho gaya hai.
+Hamari shop par visit karne ke liye *Thank You*! \u{1F64F}
+
+${details}
+
 ${line}
 
-Agar aapko aur koi online / government service chahiye ho, to hum hamesha aapki seva me hai.
+Aapko agar future mein kisi bhi *Online / Government Service* ki zarurat ho, to aap humse contact kar sakte hain.
 
-Kripya apne dost aur family ko bhi hamari shop batayein. \u{1F31F}
+Aapke trust aur support ke liye hum aabhari hain.
+Apne friends aur family ko bhi *${BIZ.name}* ke baare mein zaroor batayein. \u{1F91D}
 
 ${line}
 
 *VISIT AGAIN*
+
 \u{1F4CD} ${BIZ.address}
 \u{1F550} ${BIZ.timing}
 \u{1F4DE} ${BIZ.phoneDisplay}
 
 ${line}
+
 \u{1F464} *${operator}*
-*${BIZ.name}*
-*${BIZ.tagline}*`
+*${BIZ.name}*`
   )
 }
 
