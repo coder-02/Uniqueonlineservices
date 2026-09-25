@@ -101,20 +101,81 @@ export function requireDb(env) {
   return null
 }
 
-// Try to send a WhatsApp notification to the owner (best-effort, optional).
-// Works only if WA_API_URL + WA_API_TOKEN are configured. Otherwise no-op.
-export async function notifyOwner(env, text) {
+// ---------------------------------------------------------------------------
+// WhatsApp auto-send (server side, no window needed)
+// ---------------------------------------------------------------------------
+// Configure ONE provider in Cloudflare env vars. Supported presets:
+//
+//  WA_PROVIDER = "aisensy"   (recommended for India, easy)
+//    WA_API_TOKEN     -> your AiSensy API key
+//    WA_CAMPAIGN      -> your AiSensy campaign name (template)
+//
+//  WA_PROVIDER = "meta"      (WhatsApp Cloud API, official)
+//    WA_PHONE_ID      -> your WhatsApp phone number ID
+//    WA_API_TOKEN     -> permanent access token
+//    WA_TEMPLATE      -> approved template name (for out-of-session sends)
+//
+//  WA_PROVIDER = "generic"   (any custom endpoint)
+//    WA_API_URL       -> POST endpoint, receives { to, message }
+//    WA_API_TOKEN     -> bearer token
+//
+// If nothing is configured, sending is skipped (returns { sent:false }).
+// `to` should be a full number with country code, e.g. 917758952601
+
+export async function sendWhatsApp(env, to, text) {
+  const provider = (env.WA_PROVIDER || '').toLowerCase()
+  const number = String(to || '').replace(/\D/g, '')
+  if (!number) return { sent: false, reason: 'no-number' }
+
   try {
-    if (!env.WA_API_URL || !env.WA_API_TOKEN || !env.OWNER_WHATSAPP) return
-    await fetch(env.WA_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.WA_API_TOKEN}`,
-      },
-      body: JSON.stringify({ to: env.OWNER_WHATSAPP, message: text }),
-    })
+    if (provider === 'aisensy' && env.WA_API_TOKEN && env.WA_CAMPAIGN) {
+      const res = await fetch('https://backend.aisensy.com/campaign/t1/api/v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: env.WA_API_TOKEN,
+          campaignName: env.WA_CAMPAIGN,
+          destination: number,
+          userName: 'Customer',
+          templateParams: [text],
+        }),
+      })
+      return { sent: res.ok }
+    }
+
+    if (provider === 'meta' && env.WA_PHONE_ID && env.WA_API_TOKEN) {
+      const res = await fetch(`https://graph.facebook.com/v20.0/${env.WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.WA_API_TOKEN}`,
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: number,
+          type: 'text',
+          text: { body: text },
+        }),
+      })
+      return { sent: res.ok }
+    }
+
+    if (env.WA_API_URL && env.WA_API_TOKEN) {
+      const res = await fetch(env.WA_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.WA_API_TOKEN}` },
+        body: JSON.stringify({ to: number, message: text }),
+      })
+      return { sent: res.ok }
+    }
   } catch {
-    // ignore - notification is best effort
+    return { sent: false, reason: 'error' }
   }
+  return { sent: false, reason: 'not-configured' }
+}
+
+// Notify the shop owner (uses OWNER_WHATSAPP).
+export async function notifyOwner(env, text) {
+  if (!env.OWNER_WHATSAPP) return { sent: false }
+  return sendWhatsApp(env, env.OWNER_WHATSAPP, text)
 }

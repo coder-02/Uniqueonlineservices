@@ -31,6 +31,7 @@ export const api = {
 
   // Public
   createEnquiry: (payload) => req('/api/enquiries', { method: 'POST', body: payload }),
+  remindEnquiry: (id) => req('/api/remind', { method: 'POST', body: { id } }),
 
   // Admin
   stats: () => req('/api/stats'),

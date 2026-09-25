@@ -45,6 +45,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
   const [done, setDone] = useState(false)
+  const [result, setResult] = useState(null)
 
   // Find selected service details (documents, category)
   const selected = useMemo(() => allServices.find((s) => s.name === serviceName), [serviceName])
@@ -59,26 +60,32 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
     `https://wa.me/${waNumber}?text=` +
     encodeURIComponent(buildMessage({ name: name.trim(), service: serviceName, category, documents, fees: fees.trim(), notes: notes.trim(), ref }))
 
-  // Save to DB (best-effort) and return ref
-  const saveEnquiry = async () => {
+  // Save to DB. When `withMessage` is true, backend also auto-sends the
+  // professional WhatsApp message to the customer (if a provider is set up).
+  const saveEnquiry = async (withMessage) => {
+    const fullMsg = buildMessage({
+      name: name.trim(), service: serviceName, category, documents, fees: fees.trim(), notes: notes.trim(),
+    })
     try {
       const res = await api.createEnquiry({
         name: name.trim(),
         mobile: mobile.trim(),
         service: serviceName,
         message: `Fees: ${fees || '-'}${notes ? ' | ' + notes : ''}`,
+        customerMessage: withMessage ? fullMsg : undefined,
       })
-      return res.ref || ''
+      return { ref: res.ref || '', sent: !!res.whatsappSent }
     } catch {
-      return '' // if DB not available, still allow WhatsApp
+      return { ref: '', sent: false } // DB not available (e.g. local dev)
     }
   }
 
   const onSaveOnly = async () => {
     if (!valid) { setErr('Naam, 10-digit mobile aur service zaroori hai.'); return }
     setErr(''); setSaving(true)
-    await saveEnquiry()
+    await saveEnquiry(false)
     setSaving(false)
+    setResult({ sent: false, savedOnly: true })
     setDone(true)
     onSaved && onSaved()
   }
@@ -86,11 +93,17 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
   const onSendAndSave = async () => {
     if (!valid) { setErr('Naam, 10-digit mobile aur service zaroori hai.'); return }
     setErr(''); setSaving(true)
-    const ref = await saveEnquiry()
+    const r = await saveEnquiry(true)
     setSaving(false)
     onSaved && onSaved()
-    // Open WhatsApp with the professional message
-    window.open(buildWa(ref), '_blank', 'noopener')
+    if (r.sent) {
+      // Backend sent it automatically - no window needed.
+      setResult({ sent: true })
+    } else {
+      // No WhatsApp API configured yet - open WhatsApp as a fallback.
+      window.open(buildWa(r.ref), '_blank', 'noopener')
+      setResult({ sent: false })
+    }
     setDone(true)
   }
 
@@ -100,7 +113,13 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
         <div className="modal enquiry-modal" onClick={(e) => e.stopPropagation()}>
           <div className="success-icon"><CheckCircle2 size={50} /></div>
           <h3 className="center">Enquiry Saved!</h3>
-          <p className="muted center">Customer ki enquiry save ho gayi. Agar WhatsApp khula ho to bas "Send" dabana hai.</p>
+          {result?.savedOnly ? (
+            <p className="muted center">Enquiry dashboard me save ho gayi.</p>
+          ) : result?.sent ? (
+            <p className="muted center">Message customer ke WhatsApp par automatically bhej diya gaya. Enquiry list me bhi save ho gayi.</p>
+          ) : (
+            <p className="muted center">Enquiry save ho gayi. WhatsApp API set nahi hai, isliye WhatsApp window khula hai - bas "Send" dabao. (Auto-send ke liye WhatsApp API connect karo.)</p>
+          )}
           <button className="btn btn-primary btn-block" onClick={onClose}>Done</button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, notifyOwner } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, notifyOwner, sendWhatsApp } from '../_lib.js'
 
 // GET  /api/enquiries        -> list (admin only)
 // POST /api/enquiries        -> create (public - from website form)
@@ -60,13 +60,21 @@ export async function onRequestPost({ request, env }) {
     // ignore
   }
 
+  // Auto-send the professional message to the CUSTOMER's WhatsApp (if a
+  // provider is configured). `customerMessage` is the full formatted text
+  // built by the admin enquiry modal; falls back to a simple line.
+  const customerText =
+    (body.customerMessage && String(body.customerMessage)) ||
+    `Namaste ${name} ji, aapki ${service} enquiry (${ref}) receive ho gayi hai. Hum jaldi sampark karenge.`
+  const waResult = await sendWhatsApp(env, `91${mobile}`, customerText)
+
   // Notify owner on WhatsApp (best effort, only if configured)
   await notifyOwner(
     env,
     `New Service Request ${ref}\nName: ${name}\nMobile: ${mobile}\nService: ${service}\nMessage: ${message || '-'}`
   )
 
-  return json({ ok: true, ref })
+  return json({ ok: true, ref, whatsappSent: waResult.sent })
 }
 
 export async function onRequestPatch({ request, env }) {
