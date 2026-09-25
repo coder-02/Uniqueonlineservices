@@ -32,6 +32,7 @@ export default function NewBill() {
     const clean = items.filter((it) => it.name.trim() && Number(it.price) > 0)
     if (clean.length === 0) { setErr('Kam se kam ek item add karo (naam + price).'); return }
     const mobile = (customer.mobile || '').trim()
+    const custName = customer.name || 'Customer'
     const wantThankYou = thankYou && /^\d{10}$/.test(mobile)
     setSaving(true)
     try {
@@ -43,12 +44,14 @@ export default function NewBill() {
         payment_mode: mode,
         autoThankYou: wantThankYou,
       })
-      // If a thank-you was requested but the API couldn't auto-send, open WhatsApp.
+      // Prepare a WhatsApp link for the success screen so the shop can send it
+      // with one click (browsers block auto-opened popups after an async call).
+      let waLink = ''
       if (wantThankYou && !res.whatsappSent) {
-        const msg = buildThankYou({ name: customer.name || 'Customer', kind: 'bill', billNo: res.bill_no, amount: res.total })
-        window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
+        const msg = buildThankYou({ name: custName, kind: 'bill', billNo: res.bill_no, amount: res.total })
+        waLink = `https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`
       }
-      setDone({ ...res, thankYouSent: wantThankYou && res.whatsappSent })
+      setDone({ ...res, thankYouSent: wantThankYou && res.whatsappSent, waLink })
     } catch (e) {
       setErr(e.message)
     } finally {
@@ -71,8 +74,15 @@ export default function NewBill() {
         <h3>Bill Created!</h3>
         <p className="req-ref">Bill No: <b>{done.bill_no}</b></p>
         <p className="muted">Total: <b>{money(done.total)}</b></p>
-        {done.thankYouSent && <p className="thankyou-note"><MessageCircle size={14} /> Thank-you message customer ko bhej diya gaya.</p>}
-        <button className="btn btn-primary btn-sm" onClick={reset}><Receipt size={15} /> New Bill</button>
+        {done.thankYouSent && <p className="thankyou-note"><MessageCircle size={14} /> Thank-you message customer ko automatically bhej diya gaya.</p>}
+        <div className="cta-btns" style={{ justifyContent: 'center', marginTop: 8 }}>
+          {done.waLink && (
+            <a href={done.waLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-sm">
+              <MessageCircle size={15} /> Send Thank-You on WhatsApp
+            </a>
+          )}
+          <button className="btn btn-primary btn-sm" onClick={reset}><Receipt size={15} /> New Bill</button>
+        </div>
       </div>
     )
   }

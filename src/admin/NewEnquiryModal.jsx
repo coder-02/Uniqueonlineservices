@@ -123,14 +123,10 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
     const r = await saveEnquiry(true)
     setSaving(false)
     onSaved && onSaved()
-    if (r.sent) {
-      // Backend sent it automatically - no window needed.
-      setResult({ sent: true })
-    } else {
-      // No WhatsApp API configured yet - open WhatsApp as a fallback.
-      window.open(buildWa(r.ref), '_blank', 'noopener')
-      setResult({ sent: false })
-    }
+    // Build a WhatsApp link for one-click send on the success screen
+    // (auto window.open after await gets blocked by browsers).
+    const link = r.sent ? '' : buildWa(r.ref)
+    setResult({ sent: r.sent, waLink: link })
     setDone(true)
   }
 
@@ -145,9 +141,16 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           ) : result?.sent ? (
             <p className="muted center">Message customer ke WhatsApp par automatically bhej diya gaya. Enquiry list me bhi save ho gayi.</p>
           ) : (
-            <p className="muted center">Enquiry save ho gayi. WhatsApp API set nahi hai, isliye WhatsApp window khula hai - bas "Send" dabao. (Auto-send ke liye WhatsApp API connect karo.)</p>
+            <p className="muted center">Enquiry save ho gayi. Neeche button dabao aur WhatsApp par message bhej do.</p>
           )}
-          <button className="btn btn-primary btn-block" onClick={onClose}>Done</button>
+          <div className="cta-btns" style={{ justifyContent: 'center', marginTop: 10 }}>
+            {result?.waLink && (
+              <a href={result.waLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-sm">
+                <MessageCircle size={15} /> Send on WhatsApp
+              </a>
+            )}
+            <button className="btn btn-primary btn-sm" onClick={onClose}>Done</button>
+          </div>
         </div>
       </div>
     )

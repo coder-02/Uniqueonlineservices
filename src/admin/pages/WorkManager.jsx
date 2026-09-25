@@ -37,17 +37,22 @@ export default function WorkManager() {
 
   const setStatus = async (id, status) => {
     const row = rows.find((r) => r.id === id)
-    // When marking done, ask whether to send a thank-you WhatsApp
+    const canNotify =
+      (status === 'completed' || status === 'delivered') &&
+      row?.customer_mobile && /^\d{10}$/.test(row.customer_mobile)
+
     let notify = false
-    if ((status === 'completed' || status === 'delivered') && row?.customer_mobile && /^\d{10}$/.test(row.customer_mobile)) {
+    if (canNotify) {
       notify = window.confirm(`${row.customer_name} ko "Thank You" WhatsApp bhejein?`)
+      // Open WhatsApp NOW (inside the click/confirm gesture) so the browser
+      // does not block it. The message opens ready-to-send.
+      if (notify) {
+        const msg = buildThankYou({ name: row.customer_name, kind: 'work', service: row.service, ref: row.ref, amount: row.amount })
+        window.open(`https://wa.me/91${row.customer_mobile}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
+      }
     }
-    const res = await api.updateWorkOrder(id, status, notify)
-    // If thank-you was wanted but API not configured, open WhatsApp as fallback
-    if (notify && row && !res.whatsappSent) {
-      const msg = buildThankYou({ name: row.customer_name, kind: 'work', service: row.service, ref: row.ref, amount: row.amount })
-      window.open(`https://wa.me/91${row.customer_mobile}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
-    }
+    // Update status in the background (also triggers auto-send if API configured).
+    await api.updateWorkOrder(id, status, notify)
     load()
   }
 
