@@ -92,3 +92,17 @@ export async function onRequestPatch({ request, env }) {
   await env.DB.prepare('UPDATE enquiries SET status = ? WHERE id = ?').bind(body.status, body.id).run()
   return json({ ok: true })
 }
+
+// DELETE /api/enquiries  { id }  -> delete an enquiry (admin only)
+export async function onRequestDelete({ request, env }) {
+  const dbErr = requireDb(env)
+  if (dbErr) return dbErr
+  const unauth = await requireAuth(request, env)
+  if (unauth) return unauth
+
+  const body = await readJson(request)
+  if (!body || !body.id) return bad('id is required')
+
+  await env.DB.prepare('DELETE FROM enquiries WHERE id = ?').bind(body.id).run()
+  return json({ ok: true })
+}

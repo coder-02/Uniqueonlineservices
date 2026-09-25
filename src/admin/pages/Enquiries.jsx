@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import { business } from '../../config.js'
-import { Loader2, RefreshCw, Phone, MessageCircle, BellRing } from 'lucide-react'
+import { Loader2, RefreshCw, Phone, MessageCircle, BellRing, Trash2 } from 'lucide-react'
 
 // Days since a date string
 const daysAgo = (dateStr) => {
@@ -41,6 +41,12 @@ export default function Enquiries() {
 
   const setStatus = async (id, status) => {
     await api.updateEnquiry(id, status)
+    load()
+  }
+
+  const remove = async (r) => {
+    if (!window.confirm(`Delete enquiry ${r.ref} (${r.name})? Ye wapas nahi aayegi.`)) return
+    await api.deleteEnquiry(r.id)
     load()
   }
 
@@ -134,6 +140,7 @@ export default function Enquiries() {
                       </button>
                     )}
                     <a href={wa(r)} target="_blank" rel="noopener noreferrer" className="mini-wa" title="WhatsApp"><MessageCircle size={16} /></a>
+                    <button className="mini-delete" title="Delete" onClick={() => remove(r)}><Trash2 size={15} /></button>
                   </td>
                 </tr>
                 )

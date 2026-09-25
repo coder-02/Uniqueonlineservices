@@ -37,6 +37,7 @@ export const api = {
   stats: () => req('/api/stats'),
   enquiries: (status) => req(`/api/enquiries${status ? `?status=${status}` : ''}`),
   updateEnquiry: (id, status) => req('/api/enquiries', { method: 'PATCH', body: { id, status } }),
+  deleteEnquiry: (id) => req('/api/enquiries', { method: 'DELETE', body: { id } }),
 
   customers: (q) => req(`/api/customers${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   addCustomer: (payload) => req('/api/customers', { method: 'POST', body: payload }),

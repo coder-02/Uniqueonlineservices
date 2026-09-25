@@ -1481,3 +1481,11 @@ svg { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 .bs-thankyou input { width: 16px; height: 16px; }
 .bs-thankyou svg { color: var(--wa); }
 .thankyou-note { display: inline-flex; align-items: center; gap: 6px; color: var(--green-dark); font-size: 0.85rem; margin: 8px 0; }
+
+
+/* Enquiry delete button */
+.mini-delete {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(239,68,68,.12); color: #dc2626; border: none;
+}
+.mini-delete:hover { background: #dc2626; color: #fff; }
