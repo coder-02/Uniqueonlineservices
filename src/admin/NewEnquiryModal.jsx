@@ -4,35 +4,56 @@ import { business } from '../config.js'
 import { allServices, serviceCategories } from '../data/services.js'
 import { X, UserPlus, Save, MessageCircle, FileText, Loader2, CheckCircle2 } from 'lucide-react'
 
-// Build a professional, government-style WhatsApp message.
+// Build a professional, government-style WhatsApp confirmation message.
 function buildMessage({ name, service, category, documents, fees, notes, ref }) {
-  const line = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501'
+  const line = '\u2501'.repeat(20)
   const docLines = (documents || []).map((d, i) => `${i + 1}. ${d}`).join('\n')
+  const feeText = fees ? `\u20B9${Number(fees).toLocaleString('en-IN')}/-` : 'Shop par confirm hoga'
+  const svcLine = `${service}${category ? ` \u2013 ${category}` : ''}`
+
   return (
 `*${business.name.toUpperCase()}*
-_${business.tagline}_
+*${business.tagline}*
 ${line}
 
-Namaste *${name}* ji,
+*SERVICE ENQUIRY CONFIRMATION*
 
-Aapki service enquiry ke liye dhanyawaad. Neeche aapki service ki poori jaankari hai:
+Hello *${name} Ji*,
 
-*SERVICE:* ${service}${category ? ` (${category})` : ''}
-${ref ? `*ENQUIRY ID:* ${ref}\n` : ''}
-*ZAROORI DOCUMENTS:*
+Aapki *${service}* enquiry successfully receive ho gayi hai.
+
+*ENQUIRY DETAILS*
+${line}
+*Enquiry ID:* ${ref || 'UOS-NEW'}
+*Service:* ${svcLine}
+
+*REQUIRED DOCUMENTS*
+
 ${docLines || 'Koi special document nahi.'}
 
-*SERVICE CHARGE:* ${fees ? '\u20B9' + fees + ' /-' : 'Shop par confirm hoga'}
-${notes ? `\n*NOTE:* ${notes}\n` : ''}
+*SERVICE CHARGES:* ${feeText}
+
+*IMPORTANT INFORMATION*
+Please original documents ke saath photocopies bhi lekar aayein.
+Application process se pehle documents aur details ki verification ki jayegi.${notes ? `\n\n*NOTE:* ${notes}` : ''}
+
 ${line}
-Kripya upar diye documents lekar hamari shop par aayein:
+
+*OFFICE DETAILS*
 
 \u{1F4CD} ${business.address}
-\u{1F551} ${business.timing}
+\u{1F550} ${business.timing}
 \u{1F4DE} ${business.phoneDisplay}
 
-Dhanyawaad,
-*${business.name}*`
+${line}
+
+*AUTHORIZED SERVICE DESK*
+\u{1F464} *${business.operatorName}*
+*${business.name}*
+
+${line}
+*${business.name.toUpperCase()}*
+*${business.tagline}*`
   )
 }
 
@@ -62,17 +83,23 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
 
   // Save to DB. When `withMessage` is true, backend also auto-sends the
   // professional WhatsApp message to the customer (if a provider is set up).
+  // We pass the structured details so the backend can build the final message
+  // WITH the generated Enquiry ID.
   const saveEnquiry = async (withMessage) => {
-    const fullMsg = buildMessage({
-      name: name.trim(), service: serviceName, category, documents, fees: fees.trim(), notes: notes.trim(),
-    })
     try {
       const res = await api.createEnquiry({
         name: name.trim(),
         mobile: mobile.trim(),
         service: serviceName,
         message: `Fees: ${fees || '-'}${notes ? ' | ' + notes : ''}`,
-        customerMessage: withMessage ? fullMsg : undefined,
+        autoSend: withMessage,
+        details: {
+          category,
+          documents,
+          fees: fees.trim(),
+          notes: notes.trim(),
+          operatorName: business.operatorName,
+        },
       })
       return { ref: res.ref || '', sent: !!res.whatsappSent }
     } catch {

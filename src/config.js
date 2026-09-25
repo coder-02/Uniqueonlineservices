@@ -3,11 +3,12 @@ export const business = {
   name: "Unique Online Services",
   tagline: "Aapki Har Online Zarurat, Ek Hi Jagah",
   subtitle: "Government Services • Banking • Insurance • Documents • Online Applications",
+  operatorName: "Sayed Saifurehman", // shown in the WhatsApp message as the service desk person
   phone: "7758952601",
   phoneDisplay: "+91 77589 52601",
   whatsapp: "917758952601", // country code + number, no + or spaces
   address: "Aziz Chowk, Marul, Maharashtra",
-  timing: "Mon - Sun: 9:00 AM - 9:00 PM",
+  timing: "Monday - Sunday | 9:00 AM - 9:00 PM",
   email: "",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Aziz+Chowk+Marul+Maharashtra",
 }

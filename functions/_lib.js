@@ -1,5 +1,72 @@
 // Shared helpers for all Cloudflare Pages Functions.
 
+// Business details for server-built WhatsApp messages.
+// Keep in sync with src/config.js
+export const BIZ = {
+  name: 'Unique Online Services',
+  tagline: 'Aapki Har Online Zarurat, Ek Hi Jagah',
+  operatorName: 'Sayed Saifurehman',
+  address: 'Aziz Chowk, Marul, Maharashtra',
+  timing: 'Monday - Sunday | 9:00 AM - 9:00 PM',
+  phoneDisplay: '+91 77589 52601',
+}
+
+// Build the professional enquiry-confirmation WhatsApp message (with the ID).
+export function buildEnquiryMessage({ name, service, ref, details }) {
+  const d = details || {}
+  const line = '\u2501'.repeat(20)
+  const docs = Array.isArray(d.documents) ? d.documents : []
+  const docLines = docs.length ? docs.map((x, i) => `${i + 1}. ${x}`).join('\n') : 'Koi special document nahi.'
+  const feeText = d.fees ? `\u20B9${Number(d.fees).toLocaleString('en-IN')}/-` : 'Shop par confirm hoga'
+  const svcLine = `${service}${d.category ? ` \u2013 ${d.category}` : ''}`
+  const operator = d.operatorName || BIZ.operatorName
+
+  return (
+`*${BIZ.name.toUpperCase()}*
+*${BIZ.tagline}*
+${line}
+
+*SERVICE ENQUIRY CONFIRMATION*
+
+Hello *${name} Ji*,
+
+Aapki *${service}* enquiry successfully receive ho gayi hai.
+
+*ENQUIRY DETAILS*
+${line}
+*Enquiry ID:* ${ref}
+*Service:* ${svcLine}
+
+*REQUIRED DOCUMENTS*
+
+${docLines}
+
+*SERVICE CHARGES:* ${feeText}
+
+*IMPORTANT INFORMATION*
+Please original documents ke saath photocopies bhi lekar aayein.
+Application process se pehle documents aur details ki verification ki jayegi.${d.notes ? `\n\n*NOTE:* ${d.notes}` : ''}
+
+${line}
+
+*OFFICE DETAILS*
+
+\u{1F4CD} ${BIZ.address}
+\u{1F550} ${BIZ.timing}
+\u{1F4DE} ${BIZ.phoneDisplay}
+
+${line}
+
+*AUTHORIZED SERVICE DESK*
+\u{1F464} *${operator}*
+*${BIZ.name}*
+
+${line}
+*${BIZ.name.toUpperCase()}*
+*${BIZ.tagline}*`
+  )
+}
+
 export function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
