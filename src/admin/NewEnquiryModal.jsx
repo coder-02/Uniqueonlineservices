@@ -206,12 +206,12 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           </div>
         )}
 
-        {/* Fees manual */}
+        {/* Fees manual (optional) */}
         {selected && (
           <div className="ef">
-            <label>Service Fees (\u20B9)</label>
-            <input type="number" value={fees} onChange={(e) => setFees(e.target.value)} placeholder={`e.g. ${selected.fee || 100}`} />
-            <span className="ef-hint">Fees manually type karo - jitna aap charge karoge.</span>
+            <label>Service Fees ({'\u20B9'}) - optional</label>
+            <input type="number" value={fees} onChange={(e) => setFees(e.target.value)} placeholder={`e.g. ${selected.fee || 100} (khaali chhod sakte ho)`} />
+            <span className="ef-hint">Fees manually type karo. Khaali chhodoge to "Shop par confirm hoga" likha jayega.</span>
           </div>
         )}
 
