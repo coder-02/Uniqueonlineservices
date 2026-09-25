@@ -1419,3 +1419,40 @@ svg { display: inline-block; vertical-align: middle; flex-shrink: 0; }
   .report-grid { grid-template-columns: 1fr; }
   .admin-content { padding: 16px 14px 60px; }
 }
+
+
+/* ============================================================
+   NEW CUSTOMER ENQUIRY MODAL (admin)
+   ============================================================ */
+.new-enquiry-btn { white-space: nowrap; }
+.enquiry-modal { max-width: 560px; text-align: left; }
+.enquiry-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 18px; padding-right: 26px; }
+.enquiry-head svg { color: var(--indigo); flex-shrink: 0; margin-top: 2px; }
+.enquiry-head h3 { color: var(--text); font-size: 1.2rem; font-weight: 800; }
+.enquiry-head p { font-size: 0.85rem; }
+.enquiry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ef { margin-bottom: 14px; }
+.ef label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.ef input, .ef select, .ef textarea {
+  width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface-2); color: var(--text); font-size: 0.92rem; font-family: inherit; outline: none;
+}
+.ef input:focus, .ef select:focus, .ef textarea:focus { border-color: var(--blue); }
+.ef-hint { display: block; font-size: 0.74rem; color: var(--muted); margin-top: 4px; }
+
+.enq-docs { list-style: none; display: grid; gap: 8px; }
+.enq-docs li {
+  display: flex; align-items: center; gap: 10px; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 0.88rem; color: var(--text);
+}
+.enq-docs li svg { color: var(--indigo); flex-shrink: 0; }
+.req-tag { margin-left: auto; font-size: 0.68rem; font-weight: 700; color: var(--orange-dark); background: rgba(245,158,11,.14); padding: 3px 9px; border-radius: 20px; }
+
+.enquiry-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
+
+@media (max-width: 560px) {
+  .enquiry-grid { grid-template-columns: 1fr; }
+  .new-enquiry-btn span { display: none; }
+  .enquiry-actions { justify-content: stretch; }
+  .enquiry-actions .btn { flex: 1; }
+}

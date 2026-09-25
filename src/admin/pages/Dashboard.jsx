@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import {
   ReceiptText, IndianRupee, Users, Layers, TrendingUp, Hourglass,
-  Wallet, PlusCircle, ListChecks, Briefcase, Loader2, RefreshCw,
+  Wallet, PlusCircle, Briefcase, Loader2, RefreshCw, UserPlus,
 } from 'lucide-react'
 
 const money = (n) => '\u20B9' + Number(n || 0).toLocaleString('en-IN')
@@ -20,7 +20,7 @@ function StatCard({ icon: I, label, value, sub, tone }) {
   )
 }
 
-export default function Dashboard({ go }) {
+export default function Dashboard({ go, openEnquiry }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
@@ -81,11 +81,11 @@ export default function Dashboard({ go }) {
           <div className="admin-card">
             <h3 className="admin-card-title"><PlusCircle size={18} /> Quick Actions</h3>
             <div className="quick-actions">
+              <button className="quick-action" onClick={openEnquiry}>
+                <span className="qa-icon qa-violet"><UserPlus size={20} /></span> New Enquiry
+              </button>
               <button className="quick-action" onClick={() => go('newbill')}>
                 <span className="qa-icon qa-blue"><ReceiptText size={20} /></span> New Bill
-              </button>
-              <button className="quick-action" onClick={() => go('enquiries')}>
-                <span className="qa-icon qa-violet"><ListChecks size={20} /></span> Enquiries
               </button>
               <button className="quick-action" onClick={() => go('work')}>
                 <span className="qa-icon qa-orange"><Briefcase size={20} /></span> New Work Order
