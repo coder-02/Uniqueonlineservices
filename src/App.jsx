@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import BottomNav from './components/BottomNav.jsx'
@@ -15,10 +15,30 @@ import RequestService from './pages/RequestService.jsx'
 import Contact from './pages/Contact.jsx'
 import Fees from './pages/Fees.jsx'
 import Portals from './pages/Portals.jsx'
+import AdminApp from './admin/AdminApp.jsx'
 
 export default function App() {
   const [page, setPage] = useState('home')
   const [search, setSearch] = useState('')
+
+  // Admin panel opens at #admin (e.g. yoursite.com/#admin)
+  const [isAdmin, setIsAdmin] = useState(() => window.location.hash === '#admin')
+  useEffect(() => {
+    const onHash = () => setIsAdmin(window.location.hash === '#admin')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  if (isAdmin) {
+    return (
+      <AdminApp
+        exitAdmin={() => {
+          window.location.hash = ''
+          setIsAdmin(false)
+        }}
+      />
+    )
+  }
 
   const navigate = useCallback((to) => {
     setPage(to)

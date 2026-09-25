@@ -33,6 +33,7 @@ export default function Footer({ navigate }) {
       </div>
       <div className="footer-bottom">
         <p>&copy; {year} {business.name}. All rights reserved.</p>
+        <a href="#admin" className="footer-admin-link">Owner Login</a>
       </div>
     </footer>
   )

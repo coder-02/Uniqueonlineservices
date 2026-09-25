@@ -1,0 +1,21 @@
+# Cloudflare Pages + D1 configuration
+# ----------------------------------------------------------------
+# After creating the D1 database with:
+#   wrangler d1 create uos-db
+# copy the returned "database_id" into the value below.
+# ----------------------------------------------------------------
+
+name = "unique-online-services"
+compatibility_date = "2024-09-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"                 # available in functions as env.DB
+database_name = "uos-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Environment variables / secrets are set in the Cloudflare dashboard:
+#   ADMIN_PASSWORD   -> password to open the /admin dashboard
+#   OWNER_WHATSAPP   -> owner's WhatsApp number (e.g. 917758952601) - optional
+#   WA_API_URL       -> (optional) WhatsApp API endpoint for auto-send
+#   WA_API_TOKEN     -> (optional) token for the WhatsApp API
