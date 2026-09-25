@@ -1,19 +1,19 @@
-# Cloudflare Pages configuration
+# Cloudflare Pages + D1 configuration
 # ----------------------------------------------------------------
-# NOTE: The D1 database binding is configured in the Cloudflare
-# dashboard (Pages project -> Settings -> Functions -> D1 database
-# bindings), NOT here. That avoids needing a database_id in this file.
-#
-# In the dashboard add a binding:
-#   Variable name : DB
-#   D1 database   : uos-db
+# The D1 binding below makes the database available inside Pages
+# Functions as env.DB
 # ----------------------------------------------------------------
 
 name = "unique-online-services"
 compatibility_date = "2024-09-01"
 pages_build_output_dir = "dist"
 
-# Env vars / secrets are also set in the dashboard:
+[[d1_databases]]
+binding = "DB"
+database_name = "uos-db"
+database_id = "faad3e74-89b5-4e58-beda-c987b8d6a799"
+
+# Env vars / secrets are set in the Cloudflare dashboard:
 #   ADMIN_PASSWORD  -> password to open the /#admin dashboard
 #   OWNER_WHATSAPP  -> owner's WhatsApp number (e.g. 917758952601) - optional
 #   WA_API_URL      -> optional WhatsApp API endpoint for auto-send
