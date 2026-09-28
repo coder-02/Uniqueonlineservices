@@ -26,22 +26,47 @@ export function waTo(mobile10, message) {
   return `https://wa.me/91${mobile10}?text=${encodeURIComponent(message)}`
 }
 
-// SHORT bank-SMS style message for enquiry (WhatsApp par bhejne ke liye)
+// Short document list (max 4, comma separated)
+function shortDocs(documents) {
+  if (!documents || !documents.length) return ''
+  return documents.slice(0, 4).join(', ')
+}
+
+// Bilingual (Hindi + English) enquiry message - short, bank style
 export function shortEnquiryMsg({ name, service, ref, fees, documents }) {
   const fee = fees ? `Rs.${fees}/-` : 'shop par confirm hoga'
-  const docs = (documents && documents.length) ? ` Documents: ${documents.join(', ')}.` : ''
-  return `Dear ${name}, aapki ${service} enquiry (${ref}) receive ho gayi hai. Charge: ${fee}.${docs} Kripya documents lekar hamari shop par aayein. -${business.name}`
+  const feeEn = fees ? `Rs.${fees}/-` : 'confirmed at shop'
+  const docs = shortDocs(documents)
+  const docHi = docs ? `\u091C\u0930\u0942\u0930\u0940 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C़: ${docs}. ` : ''
+  const docEn = docs ? `Required documents: ${docs}. ` : ''
+  return (
+`\u092A\u094D\u0930\u093F\u092F ${name}, \u0906\u092A\u0915\u0940 ${service} \u090F\u0902\u0915\u094D\u0935\u093E\u092F\u0930\u0940 (${ref}) \u092A\u094D\u0930\u093E\u092A\u094D\u0924 \u0939\u094B \u0917\u092F\u0940 \u0939\u0948\u0964 \u0936\u0941\u0932\u094D\u0915: ${fee}\u0964 ${docHi}\u0915\u0943\u092A\u092F\u093E \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C़ \u0932\u0947\u0915\u0930 \u0939\u092E\u093E\u0930\u0940 \u0926\u0941\u0915\u093E\u0928 \u092A\u0930 \u0906\u090F\u0902\u0964
+
+Dear ${name}, your ${service} enquiry (${ref}) has been received. Charge: ${feeEn}. ${docEn}Please visit our shop with the documents. -${business.name}`
+  )
 }
 
-// SHORT reminder message
-export function shortReminderMsg({ name, service, ref }) {
-  return `Dear ${name}, aapki ${service} enquiry (${ref}) abhi pending hai. Kripya documents lekar hamari shop par aayein. -${business.name}`
+// Bilingual reminder message
+export function shortReminderMsg({ name, service, ref, documents }) {
+  const docs = shortDocs(documents)
+  const docHi = docs ? ` \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C़: ${docs}\u0964` : ''
+  const docEn = docs ? ` Documents: ${docs}.` : ''
+  return (
+`\u092A\u094D\u0930\u093F\u092F ${name}, \u0906\u092A\u0915\u0940 ${service} \u090F\u0902\u0915\u094D\u0935\u093E\u092F\u0930\u0940 (${ref}) \u0905\u092D\u0940 \u092A\u0947\u0902\u0921\u093F\u0902\u0917 \u0939\u0948\u0964 \u0915\u0943\u092A\u092F\u093E \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C़ \u0932\u0947\u0915\u0930 \u0926\u0941\u0915\u093E\u0928 \u092A\u0930 \u0906\u090F\u0902\u0964${docHi}
+
+Dear ${name}, your ${service} enquiry (${ref}) is still pending. Please visit our shop with the documents.${docEn} -${business.name}`
+  )
 }
 
-// SHORT thank-you message
+// Bilingual thank-you message
 export function shortThankYouMsg({ name, billNo }) {
-  const id = billNo ? ` (${billNo})` : ''
-  return `Dear ${name}, aapka kaam complete ho gaya${id}. Hamari shop par aane ke liye dhanyawaad! Dobara aayein. -${business.name}`
+  const idHi = billNo ? ` (${billNo})` : ''
+  const idEn = billNo ? ` (${billNo})` : ''
+  return (
+`\u092A\u094D\u0930\u093F\u092F ${name}, \u0906\u092A\u0915\u093E \u0915\u093E\u092E \u092A\u0942\u0930\u093E \u0939\u094B \u0917\u092F\u093E${idHi}\u0964 \u0939\u092E\u093E\u0930\u0940 \u0926\u0941\u0915\u093E\u0928 \u092A\u0930 \u0906\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0927\u0928\u094D\u092F\u0935\u093E\u0926! \u092B\u093F\u0930 \u0906\u090F\u0902\u0964
+
+Dear ${name}, your work is complete${idEn}. Thank you for visiting us! Please visit again. -${business.name}`
+  )
 }
 
 // Professional "Thank You" / service completion message.

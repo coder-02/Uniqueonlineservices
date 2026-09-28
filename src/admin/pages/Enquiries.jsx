@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import { waTo, shortReminderMsg } from '../../config.js'
+import { allServices } from '../../data/services.js'
 import { Loader2, RefreshCw, Phone, BellRing, Trash2 } from 'lucide-react'
 
 // Days since a date string
@@ -49,7 +50,8 @@ export default function Enquiries() {
 
   // Send a reminder on WhatsApp (opens WhatsApp with a ready message).
   const remind = (r) => {
-    const msg = shortReminderMsg({ name: r.name, service: r.service, ref: r.ref })
+    const svc = allServices.find((s) => s.name === r.service)
+    const msg = shortReminderMsg({ name: r.name, service: r.service, ref: r.ref, documents: svc?.documents })
     window.open(waTo(r.mobile, msg), '_blank', 'noopener')
   }
 
