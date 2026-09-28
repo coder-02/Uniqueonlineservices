@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, notifyOwner, sendSMS, smsEnquiry } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendSMS, smsEnquiry } from '../_lib.js'
 
 // GET  /api/enquiries        -> list (admin only)
 // POST /api/enquiries        -> create (public - from website form)
@@ -60,19 +60,13 @@ export async function onRequestPost({ request, env }) {
     // ignore
   }
 
-  // Send a short SMS confirmation to the customer (if an SMS gateway is set up).
+  // If an SMS gateway is configured, also send a short SMS (optional).
   let smsResult = { sent: false }
   if (body.autoSend) {
     const fees = body.details && body.details.fees
     const text = smsEnquiry({ name, service, ref, fees })
     smsResult = await sendSMS(env, mobile, text)
   }
-
-  // Notify owner (best effort, only if configured)
-  await notifyOwner(
-    env,
-    `New Service Request ${ref}\nName: ${name}\nMobile: ${mobile}\nService: ${service}`
-  )
 
   return json({ ok: true, ref, smsSent: smsResult.sent })
 }

@@ -26,6 +26,24 @@ export function waTo(mobile10, message) {
   return `https://wa.me/91${mobile10}?text=${encodeURIComponent(message)}`
 }
 
+// SHORT bank-SMS style message for enquiry (WhatsApp par bhejne ke liye)
+export function shortEnquiryMsg({ name, service, ref, fees, documents }) {
+  const fee = fees ? `Rs.${fees}/-` : 'shop par confirm hoga'
+  const docs = (documents && documents.length) ? ` Documents: ${documents.join(', ')}.` : ''
+  return `Dear ${name}, aapki ${service} enquiry (${ref}) receive ho gayi hai. Charge: ${fee}.${docs} Kripya documents lekar hamari shop par aayein. -${business.name}`
+}
+
+// SHORT reminder message
+export function shortReminderMsg({ name, service, ref }) {
+  return `Dear ${name}, aapki ${service} enquiry (${ref}) abhi pending hai. Kripya documents lekar hamari shop par aayein. -${business.name}`
+}
+
+// SHORT thank-you message
+export function shortThankYouMsg({ name, billNo }) {
+  const id = billNo ? ` (${billNo})` : ''
+  return `Dear ${name}, aapka kaam complete ho gaya${id}. Hamari shop par aane ke liye dhanyawaad! Dobara aayein. -${business.name}`
+}
+
 // Professional "Thank You" / service completion message.
 // kind: "bill" | "work"
 export function buildThankYou({ name, kind, service, billNo, ref, amount }) {

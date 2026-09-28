@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import { allServices } from '../../data/services.js'
+import { waTo, shortThankYouMsg } from '../../config.js'
 import { Loader2, RefreshCw, Plus, Briefcase } from 'lucide-react'
 
 const money = (n) => '\u20B9' + Number(n || 0).toLocaleString('en-IN')
@@ -40,12 +41,12 @@ export default function WorkManager() {
       (status === 'completed' || status === 'delivered') &&
       row?.customer_mobile && /^\d{10}$/.test(row.customer_mobile)
 
-    let notify = false
-    if (canNotify) {
-      notify = window.confirm(`${row.customer_name} ko "Thank You" SMS bhejein?`)
+    if (canNotify && window.confirm(`${row.customer_name} ko "Thank You" WhatsApp bhejein?`)) {
+      // Open WhatsApp within the click gesture (so browser doesn't block it).
+      const msg = shortThankYouMsg({ name: row.customer_name, billNo: row.ref })
+      window.open(waTo(row.customer_mobile, msg), '_blank', 'noopener')
     }
-    // Update status + trigger SMS to customer (if SMS gateway configured).
-    await api.updateWorkOrder(id, status, notify)
+    await api.updateWorkOrder(id, status, false)
     load()
   }
 

@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 import { api } from '../lib/api.js'
-import { business } from '../config.js'
+import { business, waTo, shortEnquiryMsg } from '../config.js'
 import { allServices, serviceCategories } from '../data/services.js'
-import { X, UserPlus, Save, Send, FileText, Loader2, CheckCircle2 } from 'lucide-react'
+import { X, UserPlus, Save, MessageCircle, FileText, Loader2, CheckCircle2 } from 'lucide-react'
 
 export default function NewEnquiryModal({ onClose, onSaved }) {
   const [name, setName] = useState('')
@@ -62,7 +62,10 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
     const r = await saveEnquiry(true)
     setSaving(false)
     onSaved && onSaved()
-    setResult({ sent: r.sent })
+    // Build a short WhatsApp message and prepare a click link (browsers block
+    // auto-opened popups after an async call, so show a button on success).
+    const msg = shortEnquiryMsg({ name: name.trim(), service: serviceName, ref: r.ref || 'UOS-NEW', fees: fees.trim(), documents })
+    setResult({ sent: r.sent, waLink: waTo(mobile.trim(), msg) })
     setDone(true)
   }
 
@@ -74,12 +77,17 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           <h3 className="center">Enquiry Saved!</h3>
           {result?.savedOnly ? (
             <p className="muted center">Enquiry dashboard ki list me save ho gayi.</p>
-          ) : result?.sent ? (
-            <p className="muted center">Customer ko SMS bhej diya gaya aur enquiry list me save ho gayi.</p>
           ) : (
-            <p className="muted center">Enquiry save ho gayi. SMS gateway abhi set nahi hai isliye SMS nahi gaya. (Cloudflare me SMS_PROVIDER + SMS_API_KEY set karo.)</p>
+            <p className="muted center">Enquiry save ho gayi! Neeche button dabao - WhatsApp khulega ready message ke saath, bas "Send" dabana hai.</p>
           )}
-          <button className="btn btn-primary btn-sm" onClick={onClose} style={{ marginTop: 12 }}>Done</button>
+          <div className="cta-btns" style={{ justifyContent: 'center', marginTop: 12 }}>
+            {result?.waLink && (
+              <a href={result.waLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-sm">
+                <MessageCircle size={15} /> Send on WhatsApp
+              </a>
+            )}
+            <button className="btn btn-primary btn-sm" onClick={onClose}>Done</button>
+          </div>
         </div>
       </div>
     )
@@ -94,7 +102,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           <UserPlus size={22} />
           <div>
             <h3>New Customer Enquiry</h3>
-            <p className="muted">Customer details bharo aur service chuno - documents & fees ke saath SMS bhejo.</p>
+            <p className="muted">Customer details bharo aur service chuno - documents & fees ke saath WhatsApp par bhejo.</p>
           </div>
         </div>
 
@@ -157,7 +165,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
             {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save Only
           </button>
           <button className="btn btn-primary btn-sm" onClick={onSendAndSave} disabled={saving}>
-            {saving ? <Loader2 size={15} className="spin" /> : <Send size={15} />} Send SMS &amp; Save
+            {saving ? <Loader2 size={15} className="spin" /> : <MessageCircle size={15} />} Send &amp; Save
           </button>
         </div>
       </div>

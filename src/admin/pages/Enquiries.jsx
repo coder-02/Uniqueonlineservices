@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
+import { waTo, shortReminderMsg } from '../../config.js'
 import { Loader2, RefreshCw, Phone, BellRing, Trash2 } from 'lucide-react'
 
 // Days since a date string
@@ -22,8 +23,6 @@ export default function Enquiries() {
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
-  const [reminding, setReminding] = useState(null)
-  const [toast, setToast] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -37,11 +36,6 @@ export default function Enquiries() {
 
   useEffect(load, [filter])
 
-  const showToast = (msg) => {
-    setToast(msg)
-    setTimeout(() => setToast(''), 4000)
-  }
-
   const setStatus = async (id, status) => {
     await api.updateEnquiry(id, status)
     load()
@@ -53,17 +47,10 @@ export default function Enquiries() {
     load()
   }
 
-  // Send a reminder SMS to the customer.
-  const remind = async (r) => {
-    setReminding(r.id)
-    try {
-      const res = await api.remindEnquiry(r.id)
-      showToast(res.sent ? `Reminder SMS ${r.name} ko bhej diya gaya.` : `SMS nahi gaya: ${res.reason || 'SMS gateway set nahi hai'}`)
-    } catch {
-      showToast('Reminder bhejne me dikkat aayi.')
-    } finally {
-      setReminding(null)
-    }
+  // Send a reminder on WhatsApp (opens WhatsApp with a ready message).
+  const remind = (r) => {
+    const msg = shortReminderMsg({ name: r.name, service: r.service, ref: r.ref })
+    window.open(waTo(r.mobile, msg), '_blank', 'noopener')
   }
 
   return (
@@ -80,8 +67,6 @@ export default function Enquiries() {
           </button>
         ))}
       </div>
-
-      {toast && <div className="admin-toast">{toast}</div>}
 
       {loading ? (
         <div className="admin-loading"><Loader2 size={26} className="spin" /><p>Loading...</p></div>
@@ -120,8 +105,8 @@ export default function Enquiries() {
                       <option value="cancelled">Cancelled</option>
                     </select>
                     {isPending && (
-                      <button className="mini-remind" title="Send Reminder SMS" onClick={() => remind(r)} disabled={reminding === r.id}>
-                        {reminding === r.id ? <Loader2 size={15} className="spin" /> : <BellRing size={15} />}
+                      <button className="mini-remind" title="Send Reminder on WhatsApp" onClick={() => remind(r)}>
+                        <BellRing size={15} />
                       </button>
                     )}
                     <button className="mini-delete" title="Delete" onClick={() => remove(r)}><Trash2 size={15} /></button>
