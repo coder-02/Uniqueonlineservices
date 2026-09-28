@@ -101,7 +101,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           operatorName: business.operatorName,
         },
       })
-      return { ref: res.ref || '', sent: !!res.whatsappSent }
+      return { ref: res.ref || '', sent: !!res.smsSent }
     } catch {
       return { ref: '', sent: false } // DB not available (e.g. local dev)
     }
@@ -139,9 +139,9 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           {result?.savedOnly ? (
             <p className="muted center">Enquiry dashboard me save ho gayi.</p>
           ) : result?.sent ? (
-            <p className="muted center">Message customer ke WhatsApp par automatically bhej diya gaya. Enquiry list me bhi save ho gayi.</p>
+            <p className="muted center">Customer ko SMS bhej diya gaya. Enquiry list me bhi save ho gayi.</p>
           ) : (
-            <p className="muted center">Enquiry save ho gayi. Neeche button dabao aur WhatsApp par message bhej do.</p>
+            <p className="muted center">Enquiry save ho gayi. SMS gateway abhi set nahi hai - neeche button se WhatsApp par bhej sakte ho.</p>
           )}
           <div className="cta-btns" style={{ justifyContent: 'center', marginTop: 10 }}>
             {result?.waLink && (

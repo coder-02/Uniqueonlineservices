@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendWhatsApp, buildThankYouMessage } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendSMS, smsThankYou } from '../_lib.js'
 
 // GET  /api/bills   -> recent bills (admin)
 // POST /api/bills   -> create bill (admin)
@@ -60,17 +60,12 @@ export async function onRequestPost({ request, env }) {
     }
   } catch { /* ignore */ }
 
-  // Auto "Thank You" message to customer (if requested + mobile valid + API configured)
-  let waResult = { sent: false }
+  // Auto "Thank You" SMS to customer (if requested + mobile valid + gateway configured)
+  let smsResult = { sent: false }
   if (body.autoThankYou && body.customer_mobile && /^\d{10}$/.test(body.customer_mobile)) {
-    const text = buildThankYouMessage({
-      name: body.customer_name || 'Customer',
-      kind: 'bill',
-      billNo,
-      amount: total,
-    })
-    waResult = await sendWhatsApp(env, `91${body.customer_mobile}`, text)
+    const text = smsThankYou({ name: body.customer_name || 'Customer', billNo })
+    smsResult = await sendSMS(env, body.customer_mobile, text)
   }
 
-  return json({ ok: true, bill_no: billNo, total, whatsappSent: waResult.sent })
+  return json({ ok: true, bill_no: billNo, total, smsSent: smsResult.sent })
 }

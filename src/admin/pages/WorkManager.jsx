@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import { allServices } from '../../data/services.js'
-import { buildThankYou } from '../../config.js'
 import { Loader2, RefreshCw, Plus, Briefcase } from 'lucide-react'
 
 const money = (n) => '\u20B9' + Number(n || 0).toLocaleString('en-IN')
@@ -43,15 +42,11 @@ export default function WorkManager() {
 
     let notify = false
     if (canNotify) {
-      notify = window.confirm(`${row.customer_name} ko "Thank You" WhatsApp bhejein?`)
+      notify = window.confirm(`${row.customer_name} ko "Thank You" SMS bhejein?`)
       // Open WhatsApp NOW (inside the click/confirm gesture) so the browser
       // does not block it. The message opens ready-to-send.
-      if (notify) {
-        const msg = buildThankYou({ name: row.customer_name, kind: 'work', service: row.service, ref: row.ref, amount: row.amount })
-        window.open(`https://wa.me/91${row.customer_mobile}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
-      }
     }
-    // Update status in the background (also triggers auto-send if API configured).
+    // Update status + trigger SMS (if gateway configured). notify=true when confirmed.
     await api.updateWorkOrder(id, status, notify)
     load()
   }

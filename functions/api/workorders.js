@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendWhatsApp, buildThankYouMessage } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, sendSMS, smsThankYou } from '../_lib.js'
 
 // GET   /api/workorders?status=  -> list (admin)
 // POST  /api/workorders           -> create (admin)
@@ -61,22 +61,16 @@ export async function onRequestPatch({ request, env }) {
     .bind(body.status, body.id)
     .run()
 
-  // When work is completed/delivered, send a thank-you message to the customer
-  // (only if a WhatsApp API is configured). Frontend passes notify:true.
-  let waResult = { sent: false }
+  // When work is completed/delivered, send a thank-you SMS to the customer
+  // (only if an SMS gateway is configured). Frontend passes notify:true.
+  let smsResult = { sent: false }
   if (body.notify && (body.status === 'completed' || body.status === 'delivered')) {
     const row = await env.DB.prepare('SELECT * FROM work_orders WHERE id = ?').bind(body.id).first()
     if (row && row.customer_mobile && /^\d{10}$/.test(row.customer_mobile)) {
-      const text = buildThankYouMessage({
-        name: row.customer_name,
-        kind: 'work',
-        service: row.service,
-        ref: row.ref,
-        amount: row.amount,
-      })
-      waResult = await sendWhatsApp(env, `91${row.customer_mobile}`, text)
+      const text = smsThankYou({ name: row.customer_name, billNo: row.ref })
+      smsResult = await sendSMS(env, row.customer_mobile, text)
     }
   }
 
-  return json({ ok: true, whatsappSent: waResult.sent })
+  return json({ ok: true, smsSent: smsResult.sent })
 }

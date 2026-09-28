@@ -1,4 +1,4 @@
-import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, notifyOwner, sendWhatsApp, buildEnquiryMessage } from '../_lib.js'
+import { json, bad, readJson, requireAuth, requireDb, makeRef, nextCounter, notifyOwner, sendSMS, smsEnquiry } from '../_lib.js'
 
 // GET  /api/enquiries        -> list (admin only)
 // POST /api/enquiries        -> create (public - from website form)
@@ -60,22 +60,21 @@ export async function onRequestPost({ request, env }) {
     // ignore
   }
 
-  // Build the professional confirmation message (with the generated ID) and,
-  // if autoSend is requested, send it to the CUSTOMER's WhatsApp automatically
-  // (only works when a WhatsApp API provider is configured).
-  let waResult = { sent: false }
+  // Send a short SMS confirmation to the customer (if an SMS gateway is set up).
+  let smsResult = { sent: false }
   if (body.autoSend) {
-    const customerText = buildEnquiryMessage({ name, service, ref, details: body.details })
-    waResult = await sendWhatsApp(env, `91${mobile}`, customerText)
+    const fees = body.details && body.details.fees
+    const text = smsEnquiry({ name, service, ref, fees })
+    smsResult = await sendSMS(env, mobile, text)
   }
 
-  // Notify owner on WhatsApp (best effort, only if configured)
+  // Notify owner (best effort, only if configured)
   await notifyOwner(
     env,
-    `New Service Request ${ref}\nName: ${name}\nMobile: ${mobile}\nService: ${service}\nMessage: ${message || '-'}`
+    `New Service Request ${ref}\nName: ${name}\nMobile: ${mobile}\nService: ${service}`
   )
 
-  return json({ ok: true, ref, whatsappSent: waResult.sent })
+  return json({ ok: true, ref, smsSent: smsResult.sent })
 }
 
 export async function onRequestPatch({ request, env }) {

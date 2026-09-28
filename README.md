@@ -73,11 +73,26 @@ wrangler d1 execute uos-db --file=./schema.sql --remote
 - Every request a customer submits on **"Request a Service"** is saved to the database and shows up
   instantly in **Enquiry List** (and, if configured, sends a WhatsApp notification).
 
-### WhatsApp notifications
-- Out of the box, customer requests are saved to the dashboard. The customer can also tap
-  "Also send on WhatsApp" to message you directly.
-- For **automatic** WhatsApp push to the owner, set `WA_API_URL` + `WA_API_TOKEN` + `OWNER_WHATSAPP`
-  (using a provider like WhatsApp Cloud API). The backend calls it in `functions/_lib.js -> notifyOwner`.
+### SMS notifications (bank-style text messages)
+Customers get short SMS (like bank messages) for: enquiry confirmation, reminders, and thank-you
+after a bill/work is done. This needs an SMS gateway. Set these env vars in Cloudflare:
+
+**Fast2SMS (India, easy):**
+- `SMS_PROVIDER` = `fast2sms`
+- `SMS_API_KEY` = your Fast2SMS API key
+
+**MSG91 (DLT template based):**
+- `SMS_PROVIDER` = `msg91`
+- `SMS_API_KEY` = MSG91 auth key
+- `SMS_SENDER` = 6-char sender/header id
+- `SMS_TEMPLATE` = approved DLT template id
+
+**Generic gateway:**
+- `SMS_API_URL` = POST endpoint receiving `{ to, message }`
+- `SMS_API_KEY` = bearer token
+
+> India: SMS requires DLT registration + approved templates (TRAI rule). Until an SMS gateway is
+> configured, the dashboard falls back to opening WhatsApp with the message. All data is still saved.
 
 ---
 

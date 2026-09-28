@@ -125,6 +125,91 @@ ${line}
   )
 }
 
+// ---------------------------------------------------------------------------
+// SHORT SMS-style messages (bank style, ~160 chars, no emoji/markdown)
+// ---------------------------------------------------------------------------
+// Enquiry SMS
+export function smsEnquiry({ name, service, ref, fees }) {
+  const fee = fees ? `Rs.${fees}` : 'shop par confirm'
+  return `Dear ${name}, aapki ${service} enquiry (${ref}) receive ho gayi. Charge: ${fee}. Documents lekar shop par aayein. -Unique Online Services`
+}
+
+// Reminder SMS
+export function smsReminder({ name, service, ref }) {
+  return `Dear ${name}, aapki ${service} enquiry (${ref}) abhi pending hai. Kripya documents lekar shop par aayein. -Unique Online Services`
+}
+
+// Thank-you SMS (after bill/work done)
+export function smsThankYou({ name, billNo }) {
+  const id = billNo ? ` (${billNo})` : ''
+  return `Dear ${name}, aapka kaam complete ho gaya${id}. Hamari shop par aane ke liye dhanyawaad! Dobara aayein. -Unique Online Services`
+}
+
+// ---------------------------------------------------------------------------
+// SMS sending (SMS gateway - Fast2SMS / MSG91 / generic)
+// ---------------------------------------------------------------------------
+// Configure in Cloudflare env vars:
+//   SMS_PROVIDER = "fast2sms"
+//     SMS_API_KEY   -> Fast2SMS API key
+//     (uses the "q" quick route; DLT route needs SMS_SENDER + SMS_TEMPLATE)
+//   SMS_PROVIDER = "msg91"
+//     SMS_API_KEY   -> MSG91 auth key
+//     SMS_SENDER    -> 6-char sender/header id
+//     SMS_TEMPLATE  -> DLT template id
+//   SMS_PROVIDER = "generic"
+//     SMS_API_URL   -> POST endpoint, receives { to, message }
+//     SMS_API_KEY   -> bearer token
+//
+// `to` = 10-digit number (India). Returns { sent }.
+export async function sendSMS(env, to, text) {
+  const provider = (env.SMS_PROVIDER || '').toLowerCase()
+  const number = String(to || '').replace(/\D/g, '').slice(-10)
+  if (number.length !== 10) return { sent: false, reason: 'bad-number' }
+
+  try {
+    if (provider === 'fast2sms' && env.SMS_API_KEY) {
+      const params = new URLSearchParams({
+        authorization: env.SMS_API_KEY,
+        route: 'q',
+        message: text,
+        numbers: number,
+        flash: '0',
+      })
+      const res = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      })
+      return { sent: res.ok }
+    }
+
+    if (provider === 'msg91' && env.SMS_API_KEY && env.SMS_SENDER) {
+      const res = await fetch('https://control.msg91.com/api/v5/flow/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', authkey: env.SMS_API_KEY },
+        body: JSON.stringify({
+          sender: env.SMS_SENDER,
+          template_id: env.SMS_TEMPLATE,
+          recipients: [{ mobiles: `91${number}` }],
+        }),
+      })
+      return { sent: res.ok }
+    }
+
+    if (env.SMS_API_URL && env.SMS_API_KEY) {
+      const res = await fetch(env.SMS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.SMS_API_KEY}` },
+        body: JSON.stringify({ to: number, message: text }),
+      })
+      return { sent: res.ok }
+    }
+  } catch {
+    return { sent: false, reason: 'error' }
+  }
+  return { sent: false, reason: 'not-configured' }
+}
+
 export function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,

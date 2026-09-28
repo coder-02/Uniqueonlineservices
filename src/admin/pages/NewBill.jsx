@@ -44,14 +44,13 @@ export default function NewBill() {
         payment_mode: mode,
         autoThankYou: wantThankYou,
       })
-      // Prepare a WhatsApp link for the success screen so the shop can send it
-      // with one click (browsers block auto-opened popups after an async call).
+      // If SMS gateway isn't set up, prepare a WhatsApp link as fallback.
       let waLink = ''
-      if (wantThankYou && !res.whatsappSent) {
+      if (wantThankYou && !res.smsSent) {
         const msg = buildThankYou({ name: custName, kind: 'bill', billNo: res.bill_no, amount: res.total })
         waLink = `https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`
       }
-      setDone({ ...res, thankYouSent: wantThankYou && res.whatsappSent, waLink })
+      setDone({ ...res, thankYouSent: wantThankYou && res.smsSent, waLink })
     } catch (e) {
       setErr(e.message)
     } finally {
@@ -74,7 +73,7 @@ export default function NewBill() {
         <h3>Bill Created!</h3>
         <p className="req-ref">Bill No: <b>{done.bill_no}</b></p>
         <p className="muted">Total: <b>{money(done.total)}</b></p>
-        {done.thankYouSent && <p className="thankyou-note"><MessageCircle size={14} /> Thank-you message customer ko automatically bhej diya gaya.</p>}
+        {done.thankYouSent && <p className="thankyou-note"><MessageCircle size={14} /> Thank-you SMS customer ko bhej diya gaya.</p>}
         <div className="cta-btns" style={{ justifyContent: 'center', marginTop: 8 }}>
           {done.waLink && (
             <a href={done.waLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-sm">
@@ -126,7 +125,7 @@ export default function NewBill() {
         </div>
         <label className="bs-thankyou">
           <input type="checkbox" checked={thankYou} onChange={(e) => setThankYou(e.target.checked)} />
-          <MessageCircle size={15} /> Customer ko Thank-You WhatsApp bhejo (mobile daala ho)
+          <MessageCircle size={15} /> Customer ko Thank-You SMS bhejo (mobile daala ho)
         </label>
         {err && <p className="admin-error">{err}</p>}
         <button className="btn btn-primary btn-block" onClick={save} disabled={saving}>
