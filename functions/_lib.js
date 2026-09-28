@@ -162,7 +162,10 @@ export function smsThankYou({ name, billNo }) {
 //
 // `to` = 10-digit number (India). Returns { sent }.
 export async function sendSMS(env, to, text) {
-  const provider = (env.SMS_PROVIDER || '').toLowerCase()
+  let provider = (env.SMS_PROVIDER || '').toLowerCase().trim()
+  // If a key is set but provider is empty/unknown, assume Fast2SMS.
+  if (!provider && env.SMS_API_KEY) provider = 'fast2sms'
+  if (provider.includes('fast2sms') || provider.includes('fast2') || provider === 'f2s') provider = 'fast2sms'
   const number = String(to || '').replace(/\D/g, '').slice(-10)
   if (number.length !== 10) return { sent: false, reason: 'bad-number' }
 
