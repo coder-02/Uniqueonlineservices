@@ -172,6 +172,7 @@ export async function sendSMS(env, to, text) {
         authorization: env.SMS_API_KEY,
         route: 'q',
         message: text,
+        language: 'english',
         numbers: number,
         flash: '0',
       })
@@ -180,7 +181,14 @@ export async function sendSMS(env, to, text) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString(),
       })
-      return { sent: res.ok }
+      // Fast2SMS returns 200 even on errors, with { return: false, message: [...] }
+      let data = null
+      try { data = await res.json() } catch { /* not json */ }
+      const ok = res.ok && data && data.return === true
+      return {
+        sent: ok,
+        reason: ok ? 'ok' : (data && (Array.isArray(data.message) ? data.message.join('; ') : data.message)) || `http-${res.status}`,
+      }
     }
 
     if (provider === 'msg91' && env.SMS_API_KEY && env.SMS_SENDER) {

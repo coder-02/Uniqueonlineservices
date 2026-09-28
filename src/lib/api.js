@@ -51,4 +51,6 @@ export const api = {
 
   expenses: () => req('/api/expenses'),
   addExpense: (payload) => req('/api/expenses', { method: 'POST', body: payload }),
+
+  testSms: (mobile) => req('/api/testsms', { method: 'POST', body: { mobile } }),
 }

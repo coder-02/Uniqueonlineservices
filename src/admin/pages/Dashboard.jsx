@@ -2,8 +2,56 @@ import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
 import {
   ReceiptText, IndianRupee, Users, Layers, TrendingUp, Hourglass,
-  Wallet, PlusCircle, Briefcase, Loader2, RefreshCw, UserPlus,
+  Wallet, PlusCircle, Briefcase, Loader2, RefreshCw, UserPlus, Send,
 } from 'lucide-react'
+
+function TestSmsCard() {
+  const [mobile, setMobile] = useState('')
+  const [sending, setSending] = useState(false)
+  const [out, setOut] = useState(null)
+
+  const send = async () => {
+    setOut(null)
+    setSending(true)
+    try {
+      const r = await api.testSms(mobile)
+      setOut(r)
+    } catch (e) {
+      setOut({ ok: false, reason: e.message })
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="admin-card">
+      <h3 className="admin-card-title"><Send size={18} /> Test SMS</h3>
+      <p className="admin-muted" style={{ textAlign: 'left', padding: 0, marginBottom: 10, fontSize: '.82rem' }}>
+        Apna number daalke test karo ki SMS setup sahi hai ya nahi.
+      </p>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          value={mobile}
+          onChange={(e) => setMobile(e.target.value)}
+          placeholder="10-digit number"
+          maxLength={10}
+          style={{ flex: 1, padding: '9px 12px', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--surface-2)', color: 'var(--text)', outline: 'none' }}
+        />
+        <button className="btn btn-primary btn-sm" onClick={send} disabled={sending || mobile.length !== 10}>
+          {sending ? <Loader2 size={15} className="spin" /> : 'Send'}
+        </button>
+      </div>
+      {out && (
+        <div style={{ marginTop: 10, fontSize: '.82rem' }}>
+          <div>Provider: <b>{out.provider || '-'}</b></div>
+          <div>API Key set: <b>{out.hasKey ? 'Yes' : 'No'}</b></div>
+          <div>Sent: <b style={{ color: out.sent ? 'var(--green-dark)' : '#dc2626' }}>{out.sent ? 'YES' : 'NO'}</b></div>
+          {!out.sent && <div style={{ color: '#dc2626', marginTop: 4 }}>Reason: {out.reason}</div>}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const money = (n) => '\u20B9' + Number(n || 0).toLocaleString('en-IN')
 
@@ -142,6 +190,9 @@ export default function Dashboard({ go, openEnquiry }) {
         </div>
 
         <div className="dash-right">
+          {/* Test SMS tool */}
+          <TestSmsCard />
+
           {/* Payment summary */}
           <div className="admin-card payment-card">
             <h3 className="admin-card-title">Today's Payment Summary</h3>
