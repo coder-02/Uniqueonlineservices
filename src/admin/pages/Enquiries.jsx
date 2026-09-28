@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api.js'
-import { business } from '../../config.js'
-import { Loader2, RefreshCw, Phone, MessageCircle, BellRing, Trash2 } from 'lucide-react'
+import { Loader2, RefreshCw, Phone, BellRing, Trash2 } from 'lucide-react'
 
 // Days since a date string
 const daysAgo = (dateStr) => {
@@ -23,6 +22,8 @@ export default function Enquiries() {
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
+  const [reminding, setReminding] = useState(null)
+  const [toast, setToast] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -36,8 +37,10 @@ export default function Enquiries() {
 
   useEffect(load, [filter])
 
-  const [reminding, setReminding] = useState(null)
-  const [toast, setToast] = useState('')
+  const showToast = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 4000)
+  }
 
   const setStatus = async (id, status) => {
     await api.updateEnquiry(id, status)
@@ -50,34 +53,16 @@ export default function Enquiries() {
     load()
   }
 
-  const wa = (r) =>
-    `https://wa.me/91${r.mobile}?text=` +
-    encodeURIComponent(`Namaste ${r.name}, ${business.name} se. Aapki ${r.service} request (${r.ref}) ke baare me baat karni hai.`)
-
-  // Send an automatic reminder via the backend WhatsApp API.
+  // Send a reminder SMS to the customer.
   const remind = async (r) => {
     setReminding(r.id)
-    setToast('')
     try {
       const res = await api.remindEnquiry(r.id)
-      if (res.sent) {
-        setToast(`Reminder ${r.name} ko bhej diya gaya.`)
-      } else {
-        // No API set up - fall back to opening WhatsApp with a reminder message.
-        window.open(
-          `https://wa.me/91${r.mobile}?text=` +
-            encodeURIComponent(
-              `Namaste ${r.name} ji, yaad dilana chahte hai - aapki ${r.service} enquiry (${r.ref}) abhi pending hai. Kripya documents lekar shop par aayein.\n- ${business.name}`
-            ),
-          '_blank',
-          'noopener'
-        )
-      }
+      showToast(res.sent ? `Reminder SMS ${r.name} ko bhej diya gaya.` : `SMS nahi gaya: ${res.reason || 'SMS gateway set nahi hai'}`)
     } catch {
-      setToast('Reminder bhejne me dikkat aayi.')
+      showToast('Reminder bhejne me dikkat aayi.')
     } finally {
       setReminding(null)
-      setTimeout(() => setToast(''), 4000)
     }
   }
 
@@ -135,11 +120,10 @@ export default function Enquiries() {
                       <option value="cancelled">Cancelled</option>
                     </select>
                     {isPending && (
-                      <button className="mini-remind" title="Send Reminder" onClick={() => remind(r)} disabled={reminding === r.id}>
+                      <button className="mini-remind" title="Send Reminder SMS" onClick={() => remind(r)} disabled={reminding === r.id}>
                         {reminding === r.id ? <Loader2 size={15} className="spin" /> : <BellRing size={15} />}
                       </button>
                     )}
-                    <a href={wa(r)} target="_blank" rel="noopener noreferrer" className="mini-wa" title="WhatsApp"><MessageCircle size={16} /></a>
                     <button className="mini-delete" title="Delete" onClick={() => remove(r)}><Trash2 size={15} /></button>
                   </td>
                 </tr>

@@ -43,10 +43,8 @@ export default function WorkManager() {
     let notify = false
     if (canNotify) {
       notify = window.confirm(`${row.customer_name} ko "Thank You" SMS bhejein?`)
-      // Open WhatsApp NOW (inside the click/confirm gesture) so the browser
-      // does not block it. The message opens ready-to-send.
     }
-    // Update status + trigger SMS (if gateway configured). notify=true when confirmed.
+    // Update status + trigger SMS to customer (if SMS gateway configured).
     await api.updateWorkOrder(id, status, notify)
     load()
   }

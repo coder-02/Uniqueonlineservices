@@ -2,60 +2,7 @@ import { useState, useMemo } from 'react'
 import { api } from '../lib/api.js'
 import { business } from '../config.js'
 import { allServices, serviceCategories } from '../data/services.js'
-import { X, UserPlus, Save, MessageCircle, FileText, Loader2, CheckCircle2 } from 'lucide-react'
-
-// Build a professional, government-style WhatsApp confirmation message.
-function buildMessage({ name, service, category, documents, fees, notes, ref }) {
-  const line = '\u2501'.repeat(20)
-  const docLines = (documents || []).map((d, i) => `${i + 1}. ${d}`).join('\n')
-  const feeText = fees ? `\u20B9${Number(fees).toLocaleString('en-IN')}/-` : 'Shop par confirm hoga'
-  const svcLine = `${service}${category ? ` \u2013 ${category}` : ''}`
-
-  return (
-`*${business.name.toUpperCase()}*
-*${business.tagline}*
-${line}
-
-*SERVICE ENQUIRY CONFIRMATION*
-
-Hello *${name} Ji*,
-
-Aapki *${service}* enquiry successfully receive ho gayi hai.
-
-*ENQUIRY DETAILS*
-${line}
-*Enquiry ID:* ${ref || 'UOS-NEW'}
-*Service:* ${svcLine}
-
-*REQUIRED DOCUMENTS*
-
-${docLines || 'Koi special document nahi.'}
-
-*SERVICE CHARGES:* ${feeText}
-
-*IMPORTANT INFORMATION*
-Please original documents ke saath photocopies bhi lekar aayein.
-Application process se pehle documents aur details ki verification ki jayegi.${notes ? `\n\n*NOTE:* ${notes}` : ''}
-
-${line}
-
-*OFFICE DETAILS*
-
-\u{1F4CD} ${business.address}
-\u{1F550} ${business.timing}
-\u{1F4DE} ${business.phoneDisplay}
-
-${line}
-
-*AUTHORIZED SERVICE DESK*
-\u{1F464} *${business.operatorName}*
-*${business.name}*
-
-${line}
-*${business.name.toUpperCase()}*
-*${business.tagline}*`
-  )
-}
+import { X, UserPlus, Save, Send, FileText, Loader2, CheckCircle2 } from 'lucide-react'
 
 export default function NewEnquiryModal({ onClose, onSaved }) {
   const [name, setName] = useState('')
@@ -75,24 +22,16 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
 
   const valid = name.trim() && /^\d{10}$/.test(mobile.trim()) && serviceName
 
-  const waNumber = `91${mobile.trim()}`
-
-  const buildWa = (ref) =>
-    `https://wa.me/${waNumber}?text=` +
-    encodeURIComponent(buildMessage({ name: name.trim(), service: serviceName, category, documents, fees: fees.trim(), notes: notes.trim(), ref }))
-
-  // Save to DB. When `withMessage` is true, backend also auto-sends the
-  // professional WhatsApp message to the customer (if a provider is set up).
-  // We pass the structured details so the backend can build the final message
-  // WITH the generated Enquiry ID.
-  const saveEnquiry = async (withMessage) => {
+  // Save the enquiry to the database. When `withSms` is true, the backend also
+  // sends an SMS to the customer (if an SMS gateway is configured).
+  const saveEnquiry = async (withSms) => {
     try {
       const res = await api.createEnquiry({
         name: name.trim(),
         mobile: mobile.trim(),
         service: serviceName,
         message: `Fees: ${fees || '-'}${notes ? ' | ' + notes : ''}`,
-        autoSend: withMessage,
+        autoSend: withSms,
         details: {
           category,
           documents,
@@ -112,7 +51,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
     setErr(''); setSaving(true)
     await saveEnquiry(false)
     setSaving(false)
-    setResult({ sent: false, savedOnly: true })
+    setResult({ savedOnly: true })
     setDone(true)
     onSaved && onSaved()
   }
@@ -123,10 +62,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
     const r = await saveEnquiry(true)
     setSaving(false)
     onSaved && onSaved()
-    // Build a WhatsApp link for one-click send on the success screen
-    // (auto window.open after await gets blocked by browsers).
-    const link = r.sent ? '' : buildWa(r.ref)
-    setResult({ sent: r.sent, waLink: link })
+    setResult({ sent: r.sent })
     setDone(true)
   }
 
@@ -137,20 +73,13 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           <div className="success-icon"><CheckCircle2 size={50} /></div>
           <h3 className="center">Enquiry Saved!</h3>
           {result?.savedOnly ? (
-            <p className="muted center">Enquiry dashboard me save ho gayi.</p>
+            <p className="muted center">Enquiry dashboard ki list me save ho gayi.</p>
           ) : result?.sent ? (
-            <p className="muted center">Customer ko SMS bhej diya gaya. Enquiry list me bhi save ho gayi.</p>
+            <p className="muted center">Customer ko SMS bhej diya gaya aur enquiry list me save ho gayi.</p>
           ) : (
-            <p className="muted center">Enquiry save ho gayi. SMS gateway abhi set nahi hai - neeche button se WhatsApp par bhej sakte ho.</p>
+            <p className="muted center">Enquiry save ho gayi. SMS gateway abhi set nahi hai isliye SMS nahi gaya. (Cloudflare me SMS_PROVIDER + SMS_API_KEY set karo.)</p>
           )}
-          <div className="cta-btns" style={{ justifyContent: 'center', marginTop: 10 }}>
-            {result?.waLink && (
-              <a href={result.waLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-sm">
-                <MessageCircle size={15} /> Send on WhatsApp
-              </a>
-            )}
-            <button className="btn btn-primary btn-sm" onClick={onClose}>Done</button>
-          </div>
+          <button className="btn btn-primary btn-sm" onClick={onClose} style={{ marginTop: 12 }}>Done</button>
         </div>
       </div>
     )
@@ -165,7 +94,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
           <UserPlus size={22} />
           <div>
             <h3>New Customer Enquiry</h3>
-            <p className="muted">Customer details bharo aur service chuno - documents & fees ke saath WhatsApp par bhejo.</p>
+            <p className="muted">Customer details bharo aur service chuno - documents & fees ke saath SMS bhejo.</p>
           </div>
         </div>
 
@@ -175,7 +104,7 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Raju" />
           </div>
           <div className="ef">
-            <label>WhatsApp Number *</label>
+            <label>Mobile Number *</label>
             <input value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="10-digit number" maxLength={10} />
           </div>
         </div>
@@ -225,10 +154,10 @@ export default function NewEnquiryModal({ onClose, onSaved }) {
         <div className="enquiry-actions">
           <button className="btn btn-outline btn-sm" onClick={onClose}>Cancel</button>
           <button className="btn btn-ghost btn-sm" onClick={onSaveOnly} disabled={saving}>
-            {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save Enquiry
+            {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save Only
           </button>
-          <button className="btn btn-whatsapp btn-sm" onClick={onSendAndSave} disabled={saving}>
-            {saving ? <Loader2 size={15} className="spin" /> : <MessageCircle size={15} />} Send &amp; Save
+          <button className="btn btn-primary btn-sm" onClick={onSendAndSave} disabled={saving}>
+            {saving ? <Loader2 size={15} className="spin" /> : <Send size={15} />} Send SMS &amp; Save
           </button>
         </div>
       </div>
